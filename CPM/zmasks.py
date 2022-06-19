@@ -1,0 +1,188 @@
+#!/usr/bin/env python3
+
+"""
+This module establishes the set of masks -- the 'zmasks' -- that are acceptable under the modified Cellular Potts
+algorithm used in the paper. This ensures local and hence global Moore contiguity of cells upon iteration of the
+Metropolis-Hastings (M-H) algorithm of energy minimization. In essence, this prevents cellular fragmentation, which can be
+particularly pathological under high temperatures.
+
+Follows closely:
+
+@article{durand2016efficient,
+  title={An efficient Cellular Potts Model algorithm that forbids cell fragmentation},
+  author={Durand, Marc and Guesnet, Etienne},
+  journal={Computer Physics Communications},
+  volume={208},
+  pages={54--63},
+  year={2016},
+  publisher={Elsevier}
+}
+
+"""
+
+import numpy as np
+
+
+class Zmasks:
+    """
+    Defines the Zmasks class, wrapping the identities of the zmasks, the hashes, and corresponding changes in perimeter
+    and area.
+
+
+    Each zmask has pre-defined changes in area and perimeter, meaning these can be pre-calculated.
+
+    Hence the overall M-H algorithm proceeds by indexing the acceptable masks, and using this pre-calculated change.s
+
+    Indexing is achieved by a hashing schema:
+    - If Na = a 3x3 matrix of cell ids centred on a chosen pixel (i,j) by subsetting the I matrix.
+    - Local neighbourhood is defined as a boolean 3x3 matrix. This is either Na == s or Na == s2. s is the cell id of the
+    pixel (i,j), whereas s2 is the cell id chosen to be the neighbour, participating in a putative swap.
+    - This boolean 3x3 matrix is the zmask.
+    - zmasks are hashed by multiplying element-wise a (3x3) matrix, which contains powers of 2. This is the matrix,
+    **primes**.
+    - The hash is the sum of the element-wise multiplication between zmask and primes.
+    """
+
+    def __init__(self):
+        """
+        Initialisation of the Zmasks class.
+        """
+        # a list of rotations (which are contiguity invariant), defined in the functions below
+        rots = [self.r0, self.r90, self.r180, self.r270]
+
+        # Define z2_masks. z2_masks are the subset of acceptable z_masks that contain exactly 2 True values in the
+        # Neumann neighbourhood (ignoring the central cell (1,1)). Follows the schema in Durand and Guesnet, 2016
+        # (ref above).
+        self.z2_mask = np.zeros([3, 3]).astype(bool)
+        self.z2_mask[0, 1], self.z2_mask[1, 0], self.z2_mask[0, 0] = True, True, True
+        self.z2_mask2 = self.z2_mask.copy()
+        self.z2_mask2[0, 2] = True
+        self.z2_mask3 = self.z2_mask2.T
+        self.z2_mask4 = self.z2_mask2.copy()
+        self.z2_mask4[2, 0] = True
+        self.z2_masks = np.concatenate([np.array([rots[i](mask) for i in range(4)]) for mask in
+                                        [self.z2_mask, self.z2_mask2, self.z2_mask3, self.z2_mask4]])
+        self.z2_masks_ = self.z2_masks.copy()
+        self.z2_masks_[:, 1, 1] = True
+        self.z2_masks = np.concatenate([self.z2_masks, self.z2_masks_])
+
+        # Define z3_masks. z3_masks are the subset of acceptable z_masks that contain exactly 3 True values in the
+        # Neumann neighbourhood (ignoring the central cell (1,1)). Follows the schema in Durand and Guesnet, 2016
+        # (ref above).
+        self.z3_mask = np.ones([3, 3]).astype(bool)
+        self.z3_mask[:, 2] = False
+        self.z3_mask[1, 1] = False
+        self.z3_mask2 = self.z3_mask.copy()
+        self.z3_mask2[0, 2] = True
+        self.z3_mask3 = self.z3_mask2.T
+        self.z3_masks = np.concatenate(
+            [np.array([rots[i](self.z3_mask) for i in range(4)]), np.array([rots[i](self.z3_mask2) for i in range(4)])])
+        self.z3_masks = np.concatenate(
+            [np.array([rots[i](mask) for i in range(4)]) for mask in [self.z3_mask, self.z3_mask2, self.z3_mask3]])
+        self.z3_masks_ = self.z3_masks.copy()
+        self.z3_masks_[:, 1, 1] = True
+        self.z3_masks = np.concatenate([self.z3_masks, self.z3_masks_])
+
+        # Define z1_masks. z1_masks are the subset of acceptable z_masks that contain exactly 1 True value in the
+        # Neumann neighbourhood (ignoring the central cell (1,1)). Follows the schema in Durand and Guesnet, 2016
+        # (ref above).
+        self.z1_mask = np.zeros([3, 3]).astype(bool)
+        self.z1_mask[0, 1] = True
+        self.z1_mask2 = self.z1_mask.copy()
+        self.z1_mask2[0, 2] = True
+        self.z1_mask3 = self.z1_mask2.T
+        self.z1_mask4 = self.z1_mask2.copy()
+        self.z1_mask4[0, 0] = True
+        self.z1_masks = np.concatenate([np.array([rots[i](mask) for i in range(4)]) for mask in
+                                        [self.z1_mask, self.z1_mask2, self.z1_mask3, self.z1_mask4]])
+        self.z1_masks_ = self.z1_masks.copy()
+        self.z1_masks_[:, 1, 1] = True
+        self.z1_masks = np.concatenate([self.z1_masks, self.z1_masks_])
+
+        # z_masks is a (n_zmasks x 3 x 3) boolean array, generated by combining z1_masks, z2_masks, and z3_masks.
+        self.z_masks = np.concatenate((self.z1_masks, self.z2_masks, self.z3_masks))
+
+        # Calculate the local perimeter (changes) under each of the masks. Positions of True correspond to the cell
+        # in question.
+        i_, j_ = np.meshgrid(np.arange(-1, 2), np.arange(-1, 2), indexing="ij")
+        self.Moore = np.array([i_.ravel(), j_.ravel()]).T
+        i_2, j_2 = np.delete(i_.ravel(), 4), np.delete(j_.ravel(), 4)
+        self.perim_neighbour = np.array([i_2, j_2]).T
+        self.get_dP_masks()
+
+        ##Establish the hashing for the acceptable z_masks. Explanation in the doc-string of the class.
+        self.primes = 2 ** np.arange(9).reshape(3, 3)
+        self.hashes = np.sum(self.z_masks * self.primes, axis=(1, 2))
+
+
+    def r0(self, x):
+        """
+        A 0-degree rotation of the matrix x.
+        @param x: Input matrix.
+        @return: 0-degree rotation
+        """
+        return x
+
+
+    def r90(self, x):
+        """
+        A 90-degree rotation of the matrix x.
+        @param x: Input matrix.
+        @return: 90-degree rotation
+        """
+        return np.flip(x.T, axis=1)
+
+
+    def r180(self, x):
+        """
+        A 180-degree rotation of the matrix x.
+        @param x: Input matrix.
+        @return: 180-degree rotation
+        """
+        return np.flip(np.flip(x, axis=0), axis=1)
+
+
+    def r270(self, x):
+        """
+        A 270-degree rotation of the matrix x.
+        @param x: Input matrix.
+        @return: 270-degree rotation
+        """
+        return np.flip(x.T, axis=0)
+
+
+    def get_dP_masks(self):
+        """
+        Calculate the change in perimeter for the **True** cell in each of the zmasks.
+
+        This pre-calculation of the change in perimeter massively speeds up the CPM calculations.
+        """
+
+        def getPA(masks):
+            P = []
+            n = int(masks.shape[0] / 2)
+            for i in range(n):
+                p, a = self.get_perimeter_and_area_not_periodic(masks[i], 1)
+                p2, a2 = self.get_perimeter_and_area_not_periodic(masks[n + i], 1)
+                P.append(p2 - p)
+            return np.concatenate([np.array(P), -np.array(P)])  # check. May need to flip the sign
+
+        self.z1_masks_dP = getPA(self.z1_masks)
+        self.z2_masks_dP = getPA(self.z2_masks)
+        self.z3_masks_dP = getPA(self.z3_masks)
+        self.dP_z = np.concatenate((self.z1_masks_dP, self.z2_masks_dP, self.z3_masks_dP))
+
+
+    def get_perimeter_and_area_not_periodic(self, I, s):
+        """
+        Calculate the area and perimeter of a cell, given a matrix of cell_ids.
+
+        @param I: Matrix of cell ids.
+        @param s: Cell id for which area and perimeter is to be calculated.
+        @return: Perimeter of the cell. Area of the cell.
+        """
+        M = I == s
+        PI = np.sum(np.array([M != np.roll(np.roll(M, i, axis=0), j, axis=1) for i, j in self.perim_neighbour]), axis=0)
+        P = np.sum(PI[1:-1, 1:-1])
+        A = np.sum(M)
+        return P, A
