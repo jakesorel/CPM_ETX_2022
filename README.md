@@ -79,8 +79,11 @@ that cell $i$ occupies, i.e.:
 
 Likewise, the perimeter $P_{i}$ of cell $i$ is the number of lattice
 points that are: (i) members of the Moore neighborhood of the lattice
-points of cell $ i $ (i.e. $ \omega_{i} $); but (ii) are not themselves
-members of the cell $ i $.
+points of cell 
+$i$
+(i.e. $ \omega_{i} $); but (ii) are not themselves
+members of the cell 
+$i$.
 
 ### **Bootstrapping procedure**
 
