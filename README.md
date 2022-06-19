@@ -59,7 +59,7 @@ contractility term ($P_{i}^{2}$) and the tension of interfaces between
 cells and the media ($\kappa b_{i}$ where $b_{i}$ is the number of Moore
 neighbors of cell $i$ that are medium). The final term accounts for
 adhesion/tension with neighboring cells: $\omega_{i}$ is the set of
-lattice points $x,y$ that the cell occupies;  $\Omega$ is the Moore
+lattice points $x, y$ that the cell occupies;  $\Omega$ is the Moore
 neighborhood; meaning $I_{x + dx,y + dy}$ is the cell id of a lattice
 point that neighbors a point within the cell; $J_{i,I_{x + dx,y + dy}}$
 defines the strength of the interaction between cell $i$ and the
