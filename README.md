@@ -59,7 +59,11 @@ contractility term ($P_{i}^{2}$) and the tension of interfaces between
 cells and the media ($\kappa b_{i}$ where $b_{i}$ is the number of Moore
 neighbors of cell $i$ that are medium). The final term accounts for
 adhesion/tension with neighboring cells: $\omega_{i}$ is the set of
-lattice points $x, y$ that the cell occupies;  $\Omega$ is the Moore
+lattice points 
+$x, y$ 
+that the cell occupies;  
+$\Omega$ 
+is the Moore
 neighborhood; meaning $I_{x + dx,y + dy}$ is the cell id of a lattice
 point that neighbors a point within the cell; $J_{i,I_{x + dx,y + dy}}$
 defines the strength of the interaction between cell $i$ and the
@@ -86,8 +90,11 @@ We parameterized adhesion strengths using cohesion forces between pairs
 of cell-types that were directly measured by AFM. For each simulation,
 we sampled this distribution to build the $\mathbf{J}$ matrix.
 Specifically, for a given element $J_{ij}$ we sample (with replacement)
-the set of AFM cohesion forces measured between cell-types $c_{i}$ and
-$c_{j}$ (e.g. ES-ES, ES-TS,...), while enforcing symmetry in the
+the set of AFM cohesion forces measured between cell-types 
+$c_{i}$ 
+and
+$c_{j}$
+(e.g. ES-ES, ES-TS,...), while enforcing symmetry in the
 $\mathbf{J}$ matrix. We set entries between cells and the medium
 ($J_{0j,}{\ J}_{i0}$) to 0. Bootstrap sampling is performed \~500 times
 to establish an ensemble of $\mathbf{J}$ matrix samples. Each
