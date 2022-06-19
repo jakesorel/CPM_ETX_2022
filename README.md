@@ -12,7 +12,9 @@ Stem cell-derived synthetic embryos self-assemble by exploiting cadherin codes a
 Min Bao†, Jake Cornwall-Scoones‡, Estefania Sanchez-Vasquez, Dong-Yuan Chen, Joachim De Jonghe, Shahriar Shadkhoo, Florian Hollfelder, Matt Thomson, David M. Glover, and Magdalena Zernicka-Goetz*
 
 †: First author.
+
 ‡: Code author.
+
 *: Corresponding author (mz205 \[at\] cam.ac.uk).
 
 Cellular Potts Model was used to infer the predicted distributions
@@ -31,7 +33,7 @@ ETX-embryos.
 
 ## Model and code description
 
-## ***Model objects***
+### ***Model objects***
 
 Cells occupy contiguous sets of points in a square lattice of size
 ($N_{x} \times N_{y}$). Each cell is prescribed a unique id, recorded in
@@ -48,7 +50,7 @@ The simulation evolves via a stochastic minimization of an energy
 function that accounts for both differential affinity and other physical
 properties of cells. The energy functional was defined as below:
 
-![](figs/eq1.png){width="4.888888888888889in" height="0.875in"}
+![](figs/eq1.png)
 
 $\lambda_{A,i}$ describes the bulk modulus of area deformations of a
 cell $i$ from its optimum $A_{i,0}$. $\lambda_{P,i}$ defines its
@@ -57,7 +59,7 @@ contractility term ($P_{i}^{2}$) and the tension of interfaces between
 cells and the media ($\kappa b_{i}$ where $b_{i}$ is the number of Moore
 neighbors of cell $i$ that are medium). The final term accounts for
 adhesion/tension with neighboring cells: $\omega_{i}$ is the set of
-lattice points $x$,$y$ that the cell occupies;  $ \Omega $ is the Moore
+lattice points $ x $,$ y $ that the cell occupies;  $ \Omega $ is the Moore
 neighborhood; meaning $I_{x + dx,y + dy}$ is the cell id of a lattice
 point that neighbors a point within the cell; $J_{i,I_{x + dx,y + dy}}$
 defines the strength of the interaction between cell $i$ and the
@@ -71,8 +73,7 @@ The matrix $\mathbf{I}$ defines the area and perimeters of each cell.
 The area $A_{i}$ of cell $i$ is defined as the number of lattice point
 that cell $i$ occupies, i.e.:
 
-![](figs/eq2.png){width="5.446149387576553in"
-height="0.8611111111111112in"}
+![](figs/eq2.png)
 
 Likewise, the perimeter $P_{i}$ of cell $i$ is the number of lattice
 points that are: (i) members of the Moore neighborhood of the lattice
@@ -106,8 +107,7 @@ site is putatively reassigned to that of its neighbor. The energy
 functional is then evaluated before and after the swap, defining
 $\Delta E$. The swap is then accepted only if:
 
-![](figs/eq3.png){width="1.8055555555555556in"
-height="0.4305555555555556in"}
+![](figs/eq3.png)
 
 As with the lattice model, $T$ defines the effective temperature of the
 system, modulating the propensity to perform energetically unfavorable
